@@ -304,6 +304,12 @@ Dữ liệu nội bộ thật (ngân hàng): chỉ xử lý trên máy, output �
   401 khi chưa đăng nhập → JWT → che → review bỏ che SĐT → xuất lại `done` → tải đúng → xoá.
 - Chưa làm: CORS cho Angular (P6: dùng proxy của Angular dev server, prod: cùng domain qua reverse proxy),
   thu hồi token khi đăng xuất (blacklist), HTTPS (reverse proxy khi deploy).
+- **Tài liệu API** (drf-spectacular): `/api/schema/` (OpenAPI 3, `?format=json`) và `/api/docs/` (Swagger UI, nút
+  Authorize nhận access token). Không cần đăng nhập để xem. Swagger UI tải JS/CSS từ CDN jsdelivr: mạng không có
+  internet thì dùng `/api/schema/` với công cụ khác (Postman, Insomnia...).
+  Kiểm tra schema: `manage.py spectacular --validate --fail-on-warn`.
+- **Git**: repo riêng trong `app/` (nhánh `main`). `.gitignore` chặn `.env`, `Sample Data/`, sqlite, storage.
+  `.gitattributes` ép đuôi dòng LF.
 
 ## Xử lý tài liệu
 
