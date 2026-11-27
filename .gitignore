@@ -1,0 +1,13 @@
+# secret: dùng .env.example làm mẫu
+.env
+# dữ liệu nội bộ thật (xem Sample Data/.../README.md)
+Sample Data/
+# dev
+backend/storage/
+*.sqlite3
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+celerybeat-schedule*

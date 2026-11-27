@@ -1,0 +1,15 @@
+# pii_core (đã chạy với Python 3.11.9)
+presidio-analyzer==2.2.366
+presidio-anonymizer==2.2.366   # segments.resolve_spans dùng hàm nội bộ của bản này -> đổi bản phải chạy lại tests
+spacy==3.8.18
+pyvi==0.1.1
+regex==2026.6.28
+lxml>=4.9
+pymupdf>=1.24,<2     # PDF (P2). GIẤY PHÉP AGPL-3.0 hoặc license thương mại Artifex - cần pháp chế duyệt trước khi triển khai
+markdown>=3.5        # P3: dựng lại trang scan từ markdown OCR
+requests>=2.31       # P3: gọi gateway LightOnOCR
+# P3 cần font Unicode có dấu tiếng Việt cho trang dựng lại: PII_FONT_DIR (mặc định C:\Windows\Fonts, arial.ttf)
+
+# test
+pytest>=7.4
+python-docx==1.2.0   # chỉ để dựng file mẫu trong tests; handler dùng lxml trực tiếp

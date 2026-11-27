@@ -1,0 +1,10 @@
+# dữ liệu nội bộ thật - không bao giờ vào image
+Sample Data/
+# dev
+**/__pycache__/
+**/*.pyc
+backend/storage/
+backend/dev.sqlite3
+.env
+tests/
+PLAN.md

@@ -1,0 +1,69 @@
+# docker compose --env-file .env up --build
+# API: http://127.0.0.1:8000/api/   MinIO console: http://127.0.0.1:9001
+# P4 chưa có đăng nhập -> mọi port chỉ mở trên 127.0.0.1.
+x-app: &app
+  build: .
+  image: pii-masking-app:dev          # 1 image dùng chung cho api / worker / beat
+  env_file: .env
+  restart: unless-stopped
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+    minio: { condition: service_healthy }
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]   # chỉ là hàng đợi: task chỉ mang job_id
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+
+  minio:
+    # MinIO ngừng phát hành image trên Docker Hub / Quay (2025). Bản Bitnami "legacy" là MinIO 2025-05 ĐÓNG BĂNG,
+    # không còn cập nhật bảo mật -> chỉ dùng cho dev. Prod: tự build MinIO từ source, hoặc dùng S3 / server
+    # tương thích S3 khác (code chỉ dùng API S3 qua boto3).
+    image: bitnamilegacy/minio:latest
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+      MINIO_CONSOLE_PORT_NUMBER: "9001"
+    volumes: [miniodata:/bitnami/minio/data]
+    ports: ["127.0.0.1:9001:9001"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      retries: 30
+    restart: unless-stopped
+
+  api:
+    <<: *app
+    command: ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"]
+    ports: ["127.0.0.1:8000:8000"]
+
+  worker:
+    <<: *app
+    command: ["sh", "-c", "exec celery -A config worker --loglevel INFO --concurrency ${WORKER_CONCURRENCY:-2}"]
+
+  beat:
+    <<: *app
+    command: ["celery", "-A", "config", "beat", "--loglevel", "INFO", "--schedule", "/tmp/celerybeat-schedule"]
+
+volumes:
+  pgdata:
+  miniodata:
